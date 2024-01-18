@@ -19,12 +19,14 @@ runs:
       # Even when we fetch tags the history is fragmented and usually isn't traversable from HEAD with `git describe --tags`.
       # We fetch the entirety of the main branch history to be able to do the next step, namely
       # traversing `main` to find the last `git tag` and suppresses the 'long form' of tags (that have a bunch of commit metadata).
+      shell: bash
       id: ground-truth
       run: |
         git fetch --unshallow
         echo "version=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
 
     - name: Compare Checksums between ${{ steps.ground-truth.outputs.version }} and ${{ inputs.config-tag }}
+      shell: bash
       id: check
       run: |
         git diff --exit-code ..${{ steps.ground-truth.outputs.version }} TRUTH
