@@ -14,24 +14,24 @@ outputs:
 runs:
   using: composite
   steps:
-    - name: Fetch History and Determine Last Major Truth Update
+    - name: Determine Last Major Truth Update
       # By default, actions/checkout only checks out `--depth=1` (the tip of the main branch).
       # Even when we fetch tags the history is fragmented and usually isn't traversable from HEAD with `git describe --tags`.
       # We fetch the entirety of the main branch history to be able to do the next step, namely
       # traversing `main` to find the last `git tag` and suppresses the 'long form' of tags (that have a bunch of commit metadata).
       shell: bash
       id: ground-truth
-      run: |
-        git fetch --unshallow
-        echo "version=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+      run: echo "version=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
 
     - name: Compare Checksums between ${{ steps.ground-truth.outputs.version }} and ${{ inputs.config-tag }}
-      shell: bash
+      shell: bash {0}
       id: check
       run: |
-        git diff --exit-code ..${{ steps.ground-truth.outputs.version }} TRUTH
+        git checkout ${{ steps.ground-truth.outputs.version }}
+        diff ${{ inputs.checksum-location }}/CHECKSUM CHECKSUM
         if [ "$?" -eq 0 ]; then
           echo "result=true" >> $GITHUB_OUTPUT
         else
           echo "result=false" >> $GITHUB_OUTPUT
         fi
+        git checkout -
