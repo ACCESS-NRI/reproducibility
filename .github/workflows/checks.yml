@@ -29,6 +29,7 @@ jobs:
     environment: ${{ inputs.environment-name }}
     outputs:
       artifact-name: ${{ steps.artifact.outputs.name }}
+      experiment-location:
     steps:
       - name: Checkout Configs Repo
         # for test framework - note that this one is ACCESS-OM2 specific
@@ -54,12 +55,12 @@ jobs:
 
       - name: Run configuration
         env:
-          PAYU_EXPERIMENT_LOCATION: ${{ secrets.PAYU_EXPERIMENTS_LOCATION }}/${{ inputs.model-name }}/${{ inputs.config-tag }}
+          PAYU_EXPERIMENT_LOCATION: ${{ vars.PAYU_EXPERIMENTS_LOCATION }}/${{ inputs.model-name }}/${{ inputs.config-tag }}
         # TODO: Does the payu clone fail if there is an existing directory with ^ name
         # TODO: Does payu clone fail if the directory given doesn't exist
         run: |
           ssh -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash<<EOT
-          module use ${{ secrets.PAYU_MODULE_LOCATION }}
+          module use ${{ vars.PAYU_MODULE_LOCATION }}
           module load payu/${{ vars.PAYU_VERSION }}
           mkdir -p ${{ env.PAYU_EXPERIMENT_LOCATION }}
           payu clone --branch ${{ inputs.config-tag }} ${{ github.event.repository.clone_url }} ${{ env.PAYU_EXPERIMENT_LOCATION }}
@@ -73,7 +74,7 @@ jobs:
 
       - name: Copy Back Checksums
         run: |
-          rsync-e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
+          rsync -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
               '${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_DATA }}:${{ vars.PAYU_CHECKSUMS_LOCATION }}' \
               ${{ env.CHECKSUMS_LOCAL_LOCATION }}
 
