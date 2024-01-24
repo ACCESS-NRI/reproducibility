@@ -1,9 +1,17 @@
 name: Checksum Check
 inputs:
+  checksum-name:
+    type: string
+    required: true
+    description: The name of the GitHub artifact containing the checksum that will be compared against
   checksum-location:
     type: string
     required: true
-    description: Location of the checksums that will be compared against
+    description: Location of the GitHub artifact containing the checksum that will be compared against
+  checked-against:
+    type: string
+    required: false
+    description: Explicit config tag to checkout the 'ground truth' checksum. Defaults to last major truth update.
 outputs:
   result:
     value: ${{ steps.check.outputs.result }}
@@ -12,26 +20,28 @@ outputs:
     value: ${{ steps.ground-truth.outputs.version }}
     description: The ground truth version compared against the given artifact
 runs:
-  using: composite
-  steps:
-    - name: Determine Last Major Truth Update
-      # By default, actions/checkout only checks out `--depth=1` (the tip of the main branch).
-      # Even when we fetch tags the history is fragmented and usually isn't traversable from HEAD with `git describe --tags`.
-      # We fetch the entirety of the main branch history to be able to do the next step, namely
-      # traversing `main` to find the last `git tag` and suppresses the 'long form' of tags (that have a bunch of commit metadata).
+    - name: Determine Tag to Check Against
       shell: bash
       id: ground-truth
-      run: echo "version=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+      run: |
+        if [[ "${{ inputs.checked-against }}" == "" ]]; then
+          echo "version=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
+        else
+          echo "version=${{ inputs.checked-against }}" >> $GITHUB_OUTPUT
+        fi
 
-    - name: Compare Checksums between ${{ steps.ground-truth.outputs.version }} and ${{ inputs.config-tag }}
+    - name: Compare Checksum against ${{ steps.ground-truth.outputs.version }}
+      # we use the full `bash {0}` syntax instead of `bash` because we don't want the
+      # assumed `-e` (exit on error): the nonzero exit code on `diff` is actually used later on.
       shell: bash {0}
       id: check
       run: |
         git checkout ${{ steps.ground-truth.outputs.version }}
         diff ${{ inputs.checksum-location }}/CHECKSUM CHECKSUM
         if [ "$?" -eq 0 ]; then
+          echo "::notice::The generated checksum in the '${{ inputs.checksum-name }}' artifact is the same as the checksum tagged as '${{ steps.ground-truth.outputs.version }}'"
           echo "result=true" >> $GITHUB_OUTPUT
         else
+          echo "::error::The generated checksum in the '${{ inputs.checksum-name }}' artifact is different to the checksum tagged as '${{ steps.ground-truth.outputs.version }}'"
           echo "result=false" >> $GITHUB_OUTPUT
         fi
-        git checkout -
