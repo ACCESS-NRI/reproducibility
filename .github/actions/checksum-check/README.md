@@ -6,7 +6,9 @@ This action checks a downloaded checksum against a 'ground truth' checksum in a 
 
 | Name | Type | Description | Required | Default | Example |
 | ---- | ---- | ----------- | -------- | ------- | ------- |
-| checksum-location | string | Location of the checksums that will be compared against | true | N/A | `/opt/checksums` |
+| checksum-name | string | The name of the GitHub artifact containing the checksum that will be compared against | true | N/A | `access-om2-release-1deg_jra55_iaf-3.1` |
+| checksum-location | string | Location of the GitHub artifact containing the checksum that will be compared against | true | N/A | `/opt/checksums` |
+| checked-against | string | Explicit config tag to checkout the 'ground truth' checksum. Defaults to last major truth update | false | Finds last major checksum update | `release-1deg_jra55_iaf-3.0` |
 
 ## Outputs
 
@@ -24,9 +26,11 @@ This action checks a downloaded checksum against a 'ground truth' checksum in a 
     ref: my-access-om2-configs
 
 - id: check
-  uses: access-nri/access-om2-configs/.github/actions/check-repro@main
+  uses: access-nri/reproducibility/.github/actions/checksum-check@main
   with:
+    checksum-name: access-om2-2.1
     checksum-location: /tmp/checksums
+    checked-against: 2.0
 
 - run: echo "Result of comparison was ${{ steps.check.outputs.result }} when comparing against ${{ steps.check.outputs.ground-truth-version }}.
 
