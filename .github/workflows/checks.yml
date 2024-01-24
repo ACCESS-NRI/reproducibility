@@ -22,6 +22,8 @@ env:
   CHECKSUMS_LOCAL_LOCATION: /opt/checksums
 jobs:
   repro:
+    # NOTE: A lot of these `vars` and `secrets` are not found in this repository. Instead, they are inherited
+    # from the calling workflow (for example, `ACCESS-NRI/access-om2-configs`)
     name: Run ${{ github.ref_name }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment-name }}
