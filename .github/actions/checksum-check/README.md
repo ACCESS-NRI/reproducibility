@@ -8,7 +8,6 @@ This action checks a downloaded checksum against a 'ground truth' checksum in a 
 | ---- | ---- | ----------- | -------- | ------- | ------- |
 | checksum-name | string | The name of the GitHub artifact containing the checksum that will be compared against | true | N/A | `access-om2-release-1deg_jra55_iaf-3.1` |
 | checksum-location | string | Location of the GitHub artifact containing the checksum that will be compared against | true | N/A | `/opt/checksums` |
-| checked-against | string | Explicit config tag to checkout the 'ground truth' checksum. Defaults to last major truth update | false | Finds last major checksum update | `release-1deg_jra55_iaf-3.0` |
 
 ## Outputs
 
@@ -30,7 +29,6 @@ This action checks a downloaded checksum against a 'ground truth' checksum in a 
   with:
     checksum-name: access-om2-2.1
     checksum-location: /tmp/checksums
-    checked-against: release-1deg_jra55_iaf-2.1
 
 - run: echo "Result of comparison was ${{ steps.check.outputs.result }} when comparing against ${{ steps.check.outputs.ground-truth-version }}.
 

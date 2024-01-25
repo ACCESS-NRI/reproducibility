@@ -8,10 +8,6 @@ inputs:
     type: string
     required: true
     description: Location of the GitHub artifact containing the checksum that will be compared against
-  checked-against:
-    type: string
-    required: false
-    description: Explicit config tag to checkout the 'ground truth' checksum. Defaults to last major truth update.
 outputs:
   result:
     value: ${{ steps.check.outputs.result }}
@@ -25,12 +21,7 @@ runs:
     - name: Determine Tag to Check Against
       shell: bash
       id: ground-truth
-      run: |
-        if [[ "${{ inputs.checked-against }}" == "" ]]; then
-          echo "version=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
-        else
-          echo "version=${{ inputs.checked-against }}" >> $GITHUB_OUTPUT
-        fi
+      run: echo "version=$(git describe --tags --abbrev=0)" >> $GITHUB_OUTPUT
 
     - name: Compare Checksum against ${{ steps.ground-truth.outputs.version }}
       # we use the full `bash {0}` syntax instead of `bash` because we don't want the
