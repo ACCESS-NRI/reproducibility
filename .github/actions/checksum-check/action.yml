@@ -20,6 +20,8 @@ outputs:
     value: ${{ steps.ground-truth.outputs.version }}
     description: The ground truth version compared against the given artifact
 runs:
+  using: composite
+  steps:
     - name: Determine Tag to Check Against
       shell: bash
       id: ground-truth
