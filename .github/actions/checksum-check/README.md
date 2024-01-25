@@ -15,7 +15,7 @@ This action checks a downloaded checksum against a 'ground truth' checksum in a 
 | Name | Type | Description | Example |
 | ---- | ---- | ----------- | ------- |
 | result | boolean | The result of the comparison between the artifact and the latest ground truth | `true` |
-| ground-truth-version | string | The ground truth version compared against the input checksum | `2.1` |
+| ground-truth-version | string | The ground truth version compared against the input checksum | `release-1deg_jra55_iaf-2.1` |
 
 ## Example
 
@@ -30,7 +30,7 @@ This action checks a downloaded checksum against a 'ground truth' checksum in a 
   with:
     checksum-name: access-om2-2.1
     checksum-location: /tmp/checksums
-    checked-against: 2.0
+    checked-against: release-1deg_jra55_iaf-2.1
 
 - run: echo "Result of comparison was ${{ steps.check.outputs.result }} when comparing against ${{ steps.check.outputs.ground-truth-version }}.
 
