@@ -38,15 +38,9 @@ jobs:
       artifact-name: ${{ steps.artifact.outputs.name }}
       experiment-location: ${{ steps.run.outputs.experiment-location }}
     env:
-      TEST_OUTPUT_LOCATION: ${{ vars.TEST_OUTPUT_LOCATION }}/${{ inputs.model-name }}/${{ inputs.config-tag }}/
+      TEST_OUTPUT_LOCATION: ${{ vars.TEST_OUTPUT_LOCATION }}/${{ inputs.model-name }}/${{ inputs.config-tag }}
       EXPERIMENT_LOCATION: ${{ vars.EXPERIMENTS_LOCATION }}/${{ inputs.model-name }}/${{ inputs.config-tag }}
     steps:
-      - name: Checkout Configs Repo
-        # for test framework - note that this one is ACCESS-OM2 specific
-        uses: actions/checkout@v4
-        with:
-          ref: main
-
       - name: Setup SSH
         id: ssh
         uses: access-nri/actions/.github/actions/setup-ssh@main
@@ -96,7 +90,7 @@ jobs:
       - name: Copy Back Checksums and Test Report
         run: |
           rsync -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
-              '${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_DATA }}:${{ env.TEST_OUTPUT_LOCATION }}' \
+              '${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_DATA }}:${{ env.TEST_OUTPUT_LOCATION }}/' \
               ${{ env.TEST_OUTPUT_LOCAL_LOCATION }}
 
       - name: Generate Test Output Artifact Name
