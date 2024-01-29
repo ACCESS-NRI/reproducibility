@@ -42,7 +42,7 @@ This workflow is a generic reusable workflow that runs reproducibility checks in
 | `model-name` | `string` | The name of the model to check for reproducibility | `true` | N/A | `"access-om2"` |
 | `config-tag` | `string` | A tag on an associated config branch to use for the reproducibility run | `true` | N/A | `"release-1deg_jra55_iaf-1.2"` |
 | `environment-name` | `string` | The name of a GitHub Deployment Environment that is inherited from the caller | `true` | N/A | `"Gadi"` |
-| `test-markers` | `string` (python-style expression) | A python expression of markers to pass to the reproducibility pytests. These pytests are defined in the caller | `true` | N/A | `"checksums and fast and not slow"` |
+| `test-markers` | `string` (python-style expression) | A python expression of markers to pass to the reproducibility pytests `-m` flag. These pytests are defined in the caller | `true` | N/A | `"checksums and fast and not performance"` |
 
 #### Outputs
 
