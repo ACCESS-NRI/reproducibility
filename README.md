@@ -6,7 +6,7 @@ Framework and reusable tools for reproducibility testing of models
 
 ## Usage
 
-As with most custom actions and reusable workflows, you call it across repositories with the following syntax:
+As with most reusable workflows, you call it across repositories with the following syntax:
 
 ```yaml
 # ...
@@ -15,15 +15,6 @@ call-reusable:
   uses: access-nri/reproducibility/.github/workflows/<workflow_name>@<commit>
   with:
     param: Test
-
-call-custom-action:
-  name: Call Custom Action
-  runs-on: ubuntu-latest
-  steps:
-    - name: Call Action
-      uses: access-nri/reproducibility/.github.actions/<action_name>@<commit>
-      with:
-        other-param: Test
 ```
 
 ## Reusable Workflows
