@@ -48,6 +48,8 @@ This workflow is a generic reusable workflow that runs reproducibility checks in
 jobs:
   repro-ci:
     # run the given config and upload the checksums
+    # NOTE: we use `main` to refer to the most recent version of the workflow, to aid
+    # in the updating of our internal workflows.
     uses: access-nri/reproducibility/.github/workflows/checks.yml@main
     with:
       model-name: access-om2
