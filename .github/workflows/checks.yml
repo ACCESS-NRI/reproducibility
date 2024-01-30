@@ -38,7 +38,6 @@ jobs:
       artifact-name: ${{ steps.artifact.outputs.name }}
       experiment-location: ${{ steps.run.outputs.experiment-location }}
     env:
-      TEST_OUTPUT_LOCATION: ${{ vars.TEST_OUTPUT_LOCATION }}/${{ inputs.model-name }}/${{ inputs.config-tag }}
       EXPERIMENT_LOCATION: ${{ vars.EXPERIMENTS_LOCATION }}/${{ inputs.model-name }}/${{ inputs.config-tag }}
     steps:
       - name: Setup SSH
@@ -57,12 +56,12 @@ jobs:
         run: |
           ssh -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash<<EOT
 
-          # Update test directory
-          git -C ${{ vars.REPRO_TEST_LOCATION }} pull
-
-          # Load payu
+          # Load payu conda enviroment
           module use ${{ vars.PAYU_MODULE_LOCATION }}
           module load payu/${{ vars.PAYU_VERSION }}
+
+          # Update test directory
+          git -C ${{ vars.REPRO_TEST_LOCATION }} pull
 
           # Remove base experiment if it already exists
           if [ -d "${{ env.BASE_EXPERIMENT_LOCATION }}" ]; then
@@ -74,23 +73,19 @@ jobs:
           cd ${{ env.BASE_EXPERIMENT_LOCATION }}
           git checkout ${{ inputs.config-tag }}
 
-          # Run pytests - this also generates a CHECKSUM file
+          # Run pytests - this also generates checksums files
           pytest ${{ vars.REPRO_TEST_LOCATION }} -s \
             -m "${{ inputs.test-markers }}" \
             --output-path ${{ env.EXPERIMENT_LOCATION }} \
-            --junitxml=${{ env.EXPERIMENT_LOCATION }}/test_report.xml
+            --junitxml=${{ env.EXPERIMENT_LOCATION }}/checksum/test_report.xml
 
-          # Copy checksum file and test report over
-          mkdir -p ${{ env.TEST_OUTPUT_LOCATION }}
-          cp ${{ env.EXPERIMENT_LOCATION }}/CHECKSUM ${{ env.TEST_OUTPUT_LOCATION }}
-          cp ${{ env.EXPERIMENT_LOCATION }}/test_report.xml ${{ env.TEST_OUTPUT_LOCATION }}
           EOT
           echo "experiment-location=${{ env.EXPERIMENT_LOCATION }}" >> $GITHUB_OUTPUT
 
       - name: Copy Back Checksums and Test Report
         run: |
           rsync -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
-              '${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_DATA }}:${{ env.TEST_OUTPUT_LOCATION }}/' \
+              '${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_DATA }}:${{ env.EXPERIMENT_LOCATION }}/checksum' \
               ${{ env.TEST_OUTPUT_LOCAL_LOCATION }}
 
       - name: Generate Test Output Artifact Name
