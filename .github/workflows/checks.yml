@@ -73,6 +73,8 @@ jobs:
           cd ${{ env.BASE_EXPERIMENT_LOCATION }}
           git checkout ${{ inputs.config-tag }}
 
+          pip install -r ${{ env.BASE_EXPERIMENT_LOCATION }}/test/requirements.txt
+
           # Run pytests - this also generates checksums files
           pytest ${{ vars.REPRO_TEST_LOCATION }} -s \
             -m "${{ inputs.test-markers }}" \
