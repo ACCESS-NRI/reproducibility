@@ -10,23 +10,19 @@ on:
         type: string
         required: true
         description: The configuration branch that will be run that will generate the checksums.
-      commit-checksums-to-target-branch:
+      commit-checksums:
         type: boolean
         required: true
-        description: Whether to commit the checksums to the target branch once generated.
-      target-branch-name:
-        type: string
-        required: false
-        description: "If `commit-checksums-to-target-branch`: Which branch to commit the generated checksums."
-      target-branch-checksum-location:
+        description: Whether to commit the checksums to the config branch once generated.
+      committed-checksum-location:
         type: string
         required: false
         default: ./testing/checksums
-        description: "If `commit-checksums-to-target-branch`: Where in the repository the generated checksums should be committed to."
-      target-branch-checksum-tag:
+        description: "If `commit-checksums`: Where in the repository the generated checksums should be committed to."
+      committed-checksum-tag:
         type: string
         required: false
-        description: "If `commit-checksums-to-target-branch`: An optional tag to attach to the committed checksums."
+        description: "If `commit-checksums`: An optional tag to attach to the committed checksums."
       environment-name:
         type: string
         required: true
@@ -41,23 +37,8 @@ on:
 env:
   OUTPUT_LOCAL_LOCATION: /opt/checksum-output
 jobs:
-  input-check:
-    name: Check Validity of Inputs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check 'commit-checksums-to-target-branch' Inputs
-        run: |
-          if [[ "${{ inputs.commit-checksums-to-target-branch }}" == "true" ]]; then
-            if [[ "${{ inputs.target-branch-name }}" == "" ]]; then
-              echo "::error::You have specified that you want to 'commit-checksums-to-target-branch' but haven't specified a 'target-branch-name' to commit to."
-              exit 1
-            fi
-          fi
-
   generate-checksum:
     name: Generate
-    needs:
-      - input-check
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment-name }}
     env:
@@ -130,17 +111,17 @@ jobs:
           path: ${{ env.OUTPUT_LOCAL_LOCATION }}
 
   commit-checksum-to-branch:
-    name: Commit Checksum To ${{ inputs.target-branch-name }}
+    name: Commit Checksum To ${{ inputs.config-branch-name }}
     needs:
       - generate-checksum
-    if: inputs.commit-checksums-to-target-branch == 'true'
+    if: inputs.commit-checksums == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.target-branch-name }}
+          ref: ${{ inputs.config-branch-name }}
           fetch-depth: 0
 
       - name: Download Checksums
@@ -151,21 +132,21 @@ jobs:
 
       - name: Move Checksums to Repo
         run: |
-          mkdir -p ${{ inputs.target-branch-checksum-location }}
-          mv ${{ env.OUTPUT_LOCAL_LOCATION }}/* ${{ inputs.target-branch-checksum-location }}
+          mkdir -p ${{ inputs.committed-checksum-location }}
+          mv ${{ env.OUTPUT_LOCAL_LOCATION }}/* ${{ inputs.committed-checksum-location }}
 
       - name: Commit Checksums to Repo
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
-          git commit -m "Added initial checksums generated from ${{ inputs.config-branch-name }} to ${{ inputs.target-branch-name }}"
+          git commit -m "Added initial checksums generated from ${{ inputs.config-branch-name }}"
           git push
-          echo "::notice::Committed and pushed checksums generated from ${{ inputs.config-branch-name }} to ${{ inputs.target-branch-name }}"
+          echo "::notice::Committed and pushed checksums generated from ${{ inputs.config-branch-name }}"
 
       - name: Tag Checksums in Repo
-        if: inputs.target-branch-checksum-tag != ''
+        if: inputs.committed-checksum-tag != ''
         run: |
-          git tag ${{ inputs.target-branch-checksum-tag }}
+          git tag ${{ inputs.committed-checksum-tag }}
           git push --tags
-          echo "::notice::Pushed new tag ${{ inputs.target-branch-checksum-tag }}"
+          echo "::notice::Pushed new tag ${{ inputs.committed-checksum-tag }}"

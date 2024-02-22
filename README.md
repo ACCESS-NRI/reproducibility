@@ -67,7 +67,7 @@ This workflow is used to create the initial checksums for a given config branch,
 > The `vars` and `secrets` within this workflow are inherited from the caller, NOT defined in this repository. Therefore, they must be defined by any workflow that calls this workflow, and any call to this workflow must have `secrets: inherit`.
 
 > [!NOTE]
-> If you `commit-checksums-to-target-branch`, this workflow requires `permissions.contents: write`
+> If you `commit-checksums`, this workflow requires `permissions.contents: write`
 
 #### Inputs
 
@@ -75,10 +75,9 @@ This workflow is used to create the initial checksums for a given config branch,
 | ---- | ---- | ----------- | -------- | ------- | ------- |
 | `model-name` | `string` | Name of the model that is having it's checksums generated | `true` | N/A | `"access-om2"` |
 | `config-branch-name` | `string` | The configuration branch from the repository that will be run to generate the checksums | `true` | N/A | `"release-1deg_jra55_iaf"` |
-| `commit-checksums-to-target-branch` | `boolean` | Whether to commit the checksums to the target branch once generated | `true` | N/A | `true` |
-| `target-branch-name` | `string` |  Which branch to commit the generated checksums | Only if `commit-checksums-to-target-branch` is `true` | N/A | `"dev-1deg_jra55_iaf"` |
-| `target-branch-checksum-location` | `string` | Where in the repository the generated checksums should be committed to | Only if `commit-checksums-to-target-branch` is `true` | `"./testing/checksums"` | `"./custom/checksum/location"` |
-| `target-branch-checksum-tag` | `string` | An optional tag to attach to the committed checksums | Only if `commit-checksums-to-target-branch` is `true` | `""` | `release-1deg_jra55_iaf-1.0` |
+| `commit-checksums` | `boolean` | Whether to commit the checksums to the config branch once generated | `true` | N/A | `true` |
+| `committed-checksum-location` | `string` | Where in the repository the generated checksums should be committed to | Only if `commit-checksums` is `true` | `"./testing/checksums"` | `"./custom/checksum/location"` |
+| `committed-checksum-tag` | `string` | An optional tag to attach to the committed checksums | Only if `commit-checksums` is `true` | `""` | `release-1deg_jra55_iaf-1.0` |
 | `environment-name` | `string` | The name of a GitHub Environment that is inherited from the caller | `true` | N/A | `"Gadi Initial Checksum"` |
 
 #### Outputs
@@ -99,7 +98,7 @@ jobs:
     with:
       model-name: access-om2
       config-branch-name: release-1deg_jra55_iaf
-      commit-checksums-to-target-branch: false
+      commit-checksums: false
       environment-name: "Gadi Initial Checksum"
     secrets: inherit
 
@@ -109,10 +108,9 @@ jobs:
     with:
       model-name: access-om2
       config-branch-name: release-1deg_jra55_iaf
-      commit-checksums-to-target-branch: true
-      target-branch-name: dev-1deg_jra55_iaf
-      target-branch-checksum-location: ./checksums
-      target-branch-checksum-tag: release-1deg_jra55_iaf-1.0
+      commit-checksums: true
+      committed-checksum-location: ./checksums
+      committed-checksum-tag: release-1deg_jra55_iaf-1.0
       environment-name: "Gadi Initial Checksum"
     permissions:
       contents: write
