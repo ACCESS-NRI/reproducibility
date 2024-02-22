@@ -1,0 +1,152 @@
+name: Initial Checksums
+on:
+  workflow_call:
+    inputs:
+      model-name:
+        type: string
+        required: true
+        description: Name of the model that is having it's checksums generated.
+      config-branch-name:
+        type: string
+        required: true
+        description: The configuration branch that will be run that will generate the checksums.
+      commit-checksums:
+        type: boolean
+        required: true
+        description: Whether to commit the checksums to the config branch once generated.
+      committed-checksum-location:
+        type: string
+        required: false
+        default: ./testing/checksums
+        description: "If `commit-checksums`: Where in the repository the generated checksums should be committed to."
+      committed-checksum-tag:
+        type: string
+        required: false
+        description: "If `commit-checksums`: An optional tag to attach to the committed checksums."
+      environment-name:
+        type: string
+        required: true
+        description: The name of a GitHub Environment that is inherited from the caller.
+    outputs:
+      checksum-location:
+        value: ${{ jobs.generate-checksum.outputs.checksum-location }}
+        description: Location of the checksums on the deployment target (deployment target given by the `environment-name` input).
+      artifact-name:
+        value: ${{ jobs.generate-checksum.outputs.artifact-name }}
+        description: Name of the artifact containing the checksums and test report for this repro run
+env:
+  OUTPUT_LOCAL_LOCATION: /opt/checksum-output
+jobs:
+  generate-checksum:
+    name: Generate
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment-name }}
+    env:
+      EXPERIMENT_LOCATION: ${{ vars.EXPERIMENTS_LOCATION }}/${{ inputs.model-name }}/${{ inputs.config-branch-name }}
+    outputs:
+      artifact-name: ${{ steps.artifact.outputs.name }}
+      checksum-location: ${{ steps.run.outputs.checksum-location }}
+    steps:
+      - name: Setup SSH
+        id: ssh
+        uses: access-nri/actions/.github/actions/setup-ssh@main
+        with:
+          hosts: |
+            ${{ secrets.SSH_HOST }}
+            ${{ secrets.SSH_HOST_DATA }}
+          private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Run model on ${{ inputs.environment-name }}
+        id: run
+        env:
+          BASE_EXPERIMENT_LOCATION: ${{ env.EXPERIMENT_LOCATION }}/base-experiment
+        run: |
+          ssh -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash<<EOT
+
+          # Load payu conda enviroment
+          module use ${{ vars.PAYU_MODULE_LOCATION }}
+          module load payu/${{ vars.PAYU_VERSION }}
+
+          # Update test directory
+          git -C ${{ vars.REPRO_TEST_LOCATION }} pull
+
+          # Remove base experiment if it already exists
+          if [ -d "${{ env.BASE_EXPERIMENT_LOCATION }}" ]; then
+            rm -rf ${{ env.BASE_EXPERIMENT_LOCATION }}
+          fi
+
+          # Setup a base experiment
+          git clone ${{ github.event.repository.clone_url }} ${{ env.BASE_EXPERIMENT_LOCATION }}
+          cd ${{ env.BASE_EXPERIMENT_LOCATION }}
+          git checkout ${{ inputs.config-branch-name }}
+
+          if [ -f "${{ env.BASE_EXPERIMENT_LOCATION }}/test/requirements.txt" ]; then
+            pip install -r ${{ env.BASE_EXPERIMENT_LOCATION }}/test/requirements.txt
+          fi
+
+          # Run pytests - this also generates checksums files
+          pytest ${{ vars.REPRO_TEST_LOCATION }} -s \
+            -m "checksum" \
+            --output-path ${{ env.EXPERIMENT_LOCATION }}
+
+          EOT
+          echo "experiment-location=${{ env.EXPERIMENT_LOCATION }}" >> $GITHUB_OUTPUT
+          echo "::notice::Checksums generated on ${{ vars.DEPLOYMENT_TARGET }} at ${{ env.EXPERIMENT_LOCATION }}"
+
+      - name: Copy Back Checksums
+        run: |
+          rsync -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
+              '${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_DATA }}:${{ env.EXPERIMENT_LOCATION }}/checksum' \
+              ${{ env.OUTPUT_LOCAL_LOCATION }}
+
+      - name: Generate Output Artifact Name
+        id: artifact
+        run: echo "name=${{ inputs.model-name }}-${{ inputs.config-branch-name }}" >> $GITHUB_OUTPUT
+
+      - name: Upload Output
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          if-no-files-found: error
+          path: ${{ env.OUTPUT_LOCAL_LOCATION }}
+
+  commit-checksum-to-branch:
+    name: Commit Checksum To ${{ inputs.config-branch-name }}
+    needs:
+      - generate-checksum
+    if: inputs.commit-checksums == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.config-branch-name }}
+          fetch-depth: 0
+
+      - name: Download Checksums
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.generate-checksum.outputs.artifact-name }}
+          path: ${{ env.OUTPUT_LOCAL_LOCATION }}
+
+      - name: Move Checksums to Repo
+        run: |
+          mkdir -p ${{ inputs.committed-checksum-location }}
+          mv ${{ env.OUTPUT_LOCAL_LOCATION }}/* ${{ inputs.committed-checksum-location }}
+
+      - name: Commit Checksums to Repo
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+          git commit -m "Added initial checksums generated from ${{ inputs.config-branch-name }}"
+          git push
+          echo "::notice::Committed and pushed checksums generated from ${{ inputs.config-branch-name }}"
+
+      - name: Tag Checksums in Repo
+        if: inputs.committed-checksum-tag != ''
+        run: |
+          git tag ${{ inputs.committed-checksum-tag }}
+          git push --tags
+          echo "::notice::Pushed new tag ${{ inputs.committed-checksum-tag }}"
