@@ -54,7 +54,7 @@ jobs:
         env:
           BASE_EXPERIMENT_LOCATION: ${{ env.EXPERIMENT_LOCATION }}/base-experiment
         run: |
-          ssh -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash<<EOT
+          ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash<<'EOT'
 
           # Load payu conda enviroment
           module use ${{ vars.PAYU_MODULE_LOCATION }}
