@@ -78,6 +78,7 @@ This workflow is used to create the initial checksums for a given config branch,
 | `commit-checksums-to-target-branch` | `boolean` | Whether to commit the checksums to the target branch once generated | `true` | N/A | `true` |
 | `target-branch-name` | `string` |  Which branch to commit the generated checksums | Only if `commit-checksums-to-target-branch` is `true` | N/A | `"dev-1deg_jra55_iaf"` |
 | `target-branch-checksum-location` | `string` | Where in the repository the generated checksums should be committed to | Only if `commit-checksums-to-target-branch` is `true` | `"./testing/checksums"` | `"./custom/checksum/location"` |
+| `target-branch-checksum-tag` | `string` | An optional tag to attach to the committed checksums | Only if `commit-checksums-to-target-branch` is `true` | `""` | `release-1deg_jra55_iaf-1.0` |
 | `environment-name` | `string` | The name of a GitHub Environment that is inherited from the caller | `true` | N/A | `"Gadi Initial Checksum"` |
 
 #### Outputs
@@ -111,6 +112,7 @@ jobs:
       commit-checksums-to-target-branch: true
       target-branch-name: dev-1deg_jra55_iaf
       target-branch-checksum-location: ./checksums
+      target-branch-checksum-tag: release-1deg_jra55_iaf-1.0
       environment-name: "Gadi Initial Checksum"
     permissions:
       contents: write
