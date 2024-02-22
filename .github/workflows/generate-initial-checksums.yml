@@ -80,8 +80,8 @@ jobs:
           cd ${{ env.BASE_EXPERIMENT_LOCATION }}
           git checkout ${{ inputs.config-branch-name }}
 
-          if [ -f "${{ env.BASE_EXPERIMENT_LOCATION }}/test/requirements.txt" ]; then
-            pip install -r ${{ env.BASE_EXPERIMENT_LOCATION }}/test/requirements.txt
+          if [ -f "${{ vars.REPRO_TEST_LOCATION }}/requirements.txt" ]; then
+            pip install -r ${{ vars.REPRO_TEST_LOCATION }}/requirements.txt
           fi
 
           # Run pytests - this also generates checksums files
