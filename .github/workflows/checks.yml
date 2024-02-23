@@ -77,6 +77,10 @@ jobs:
             pip install -r ${{ vars.REPRO_TEST_LOCATION }}/requirements.txt
           fi
 
+          # The pytest might fail in this command, but that is okay. We still want to run the
+          # rest of the commands after this step.
+          set +e
+
           # Run pytests - this also generates checksums files
           pytest ${{ vars.REPRO_TEST_LOCATION }} -s \
             -m "${{ inputs.test-markers }}" \
@@ -84,12 +88,15 @@ jobs:
             --output-path ${{ env.EXPERIMENT_LOCATION }} \
             --junitxml=${{ env.EXPERIMENT_LOCATION }}/checksum/test_report.xml
 
+            # We want the exit code post-`pytest` to be 0 so the overall `ssh` call succeeeds
+            # after a potential `pytest` error.
+            exit 0
           EOT
           echo "experiment-location=${{ env.EXPERIMENT_LOCATION }}" >> $GITHUB_OUTPUT
 
       - name: Copy Back Checksums and Test Report
         run: |
-          rsync -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
+          rsync --recursive -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
               '${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_DATA }}:${{ env.EXPERIMENT_LOCATION }}/checksum' \
               ${{ env.TEST_OUTPUT_LOCAL_LOCATION }}
 

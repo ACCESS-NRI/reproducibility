@@ -104,7 +104,7 @@ jobs:
 
       - name: Copy Back Checksums
         run: |
-          rsync -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
+          rsync --recursive -e 'ssh -i ${{ steps.ssh.outputs.private-key-path }}' \
               '${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST_DATA }}:${{ env.EXPERIMENT_LOCATION }}/checksum' \
               ${{ env.OUTPUT_LOCAL_LOCATION }}
 
