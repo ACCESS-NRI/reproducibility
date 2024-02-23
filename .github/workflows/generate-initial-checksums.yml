@@ -87,7 +87,9 @@ jobs:
           # Run pytests - this also generates checksums files
           pytest ${{ vars.REPRO_TEST_LOCATION }} -s \
             -m "checksum" \
+            --rootdir ${{vars.REPRO_TEST_LOCATION }} \
             --output-path ${{ env.EXPERIMENT_LOCATION }}
+
 
           EOT
           echo "experiment-location=${{ env.EXPERIMENT_LOCATION }}" >> $GITHUB_OUTPUT

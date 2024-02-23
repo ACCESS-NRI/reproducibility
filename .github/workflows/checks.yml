@@ -80,6 +80,7 @@ jobs:
           # Run pytests - this also generates checksums files
           pytest ${{ vars.REPRO_TEST_LOCATION }} -s \
             -m "${{ inputs.test-markers }}" \
+            --rootdir ${{vars.REPRO_TEST_LOCATION }}
             --output-path ${{ env.EXPERIMENT_LOCATION }} \
             --junitxml=${{ env.EXPERIMENT_LOCATION }}/checksum/test_report.xml
 
