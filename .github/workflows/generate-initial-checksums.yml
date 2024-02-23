@@ -123,7 +123,7 @@ jobs:
     name: Commit Checksum To ${{ inputs.config-branch-name }}
     needs:
       - generate-checksum
-    if: inputs.commit-checksums == 'true'
+    if: inputs.commit-checksums
     runs-on: ubuntu-latest
     permissions:
       contents: write
