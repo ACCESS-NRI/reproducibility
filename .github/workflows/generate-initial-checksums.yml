@@ -94,7 +94,11 @@ jobs:
             --rootdir ${{vars.REPRO_TEST_LOCATION }} \
             --output-path ${{ env.EXPERIMENT_LOCATION }}
 
+          # In this case, we want the exit code post-`pytest` to be 0 so the overall `ssh` call succeeeds
+          # after the expected `pytest` error.
+          exit 0
           EOT
+
           echo "experiment-location=${{ env.EXPERIMENT_LOCATION }}" >> $GITHUB_OUTPUT
           echo "::notice::Checksums generated on ${{ vars.DEPLOYMENT_TARGET }} at ${{ env.EXPERIMENT_LOCATION }}"
 
