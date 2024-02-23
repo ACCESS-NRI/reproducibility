@@ -142,7 +142,7 @@ jobs:
       - name: Move Checksums to Repo
         run: |
           mkdir -p ${{ inputs.committed-checksum-location }}
-          mv ${{ env.OUTPUT_LOCAL_LOCATION }}/* ${{ inputs.committed-checksum-location }}
+          mv ${{ env.OUTPUT_LOCAL_LOCATION }}/checksum/* ${{ inputs.committed-checksum-location }}
 
       - name: Commit Checksums to Repo
         run: |
