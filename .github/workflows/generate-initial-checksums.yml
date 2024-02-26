@@ -144,9 +144,10 @@ jobs:
           mv ${{ env.OUTPUT_LOCAL_LOCATION }}/checksum/* ${{ inputs.committed-checksum-location }}
 
       - name: Commit Checksums to Repo
+        # NOTE: Regarding the config user.name/user.email, see https://github.com/actions/checkout/pull/1184
         run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add .
           git commit -m "Added initial checksums generated from ${{ inputs.config-branch-name }}"
           git push
