@@ -145,7 +145,7 @@ jobs:
 
       - name: Update version in metadata.yaml
         if: inputs.committed-checksum-tag != ''
-        run: yq -i '.version = ${{ inputs.committed-checksum-tag }}' metadata.yaml
+        run: yq -i '.version = "${{ inputs.committed-checksum-tag }}"' metadata.yaml
 
       - name: Commit Checksums to Repo
         # NOTE: Regarding the config user.name/user.email, see https://github.com/actions/checkout/pull/1184
