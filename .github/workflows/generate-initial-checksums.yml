@@ -18,11 +18,11 @@ on:
         type: string
         required: false
         default: ./testing/checksum
-        description: "If `commit-checksums`: Where in the repository the generated checksums should be committed to."
+        description: "If checksums are committed: Where in the repository the generated checksums should be committed to."
       committed-checksum-tag:
         type: string
         required: false
-        description: "If `commit-checksums`: An optional tag to attach to the committed checksums."
+        description: "If checksums are committed: An optional tag to attach to the committed checksums."
       environment-name:
         type: string
         required: true
@@ -142,6 +142,10 @@ jobs:
         run: |
           mkdir -p ${{ inputs.committed-checksum-location }}
           mv ${{ env.OUTPUT_LOCAL_LOCATION }}/checksum/* ${{ inputs.committed-checksum-location }}
+
+      - name: Update version in metadata.yaml
+        if: inputs.committed-checksum-tag != ''
+        run: yq -i '.version = "${{ inputs.committed-checksum-tag }}"' metadata.yaml
 
       - name: Commit Checksums to Repo
         # NOTE: Regarding the config user.name/user.email, see https://github.com/actions/checkout/pull/1184
