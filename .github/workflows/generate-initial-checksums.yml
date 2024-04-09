@@ -153,8 +153,8 @@ jobs:
       - name: Commit Checksums to Repo
         # NOTE: Regarding the config user.name/user.email, see https://github.com/actions/checkout/pull/1184
         run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git config user.name ${{ vars.GH_ACTIONS_BOT_GIT_USER_NAME }}
+          git config user.email ${{ vars.GH_ACTIONS_BOT_GIT_USER_EMAIL }}
           git add .
           git commit -m "Added initial checksums generated from ${{ inputs.config-branch-name }}"
           git push
