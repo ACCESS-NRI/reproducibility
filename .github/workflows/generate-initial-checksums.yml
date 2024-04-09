@@ -148,7 +148,7 @@ jobs:
         run: |
           full_tag=${{ inputs.committed-checksum-tag }}
           version=${full_tag/*-}
-          yq -i '.version = "${version}"' metadata.yaml
+          yq -i ".version = \"${version}\"" metadata.yaml
 
       - name: Commit Checksums to Repo
         # NOTE: Regarding the config user.name/user.email, see https://github.com/actions/checkout/pull/1184
