@@ -166,3 +166,16 @@ jobs:
           git tag ${{ inputs.committed-checksum-tag }}
           git push --tags
           echo "::notice::Pushed new tag ${{ inputs.committed-checksum-tag }}"
+
+      - name: Create Release
+        if: inputs.committed-checksum-tag != ''
+        env:
+          TAG: ${{ inputs.committed-checksum-tag }}
+          IS_REPRO_BREAK: ${{ endsWith(inputs.committed-checksum-tag, '.0') && 'DOES' || 'does not' }}
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844  #v0.1.15
+        with:
+          tag_name: ${{ env.TAG }}
+          name: Configuration ${{ env.TAG }}
+          body: |
+            This released configuration ${{ env.IS_REPRO_BREAK }} break reproducibility with released configurations before it. See the 'Config Tags' section in the `README.md` for more information.
+          generate_release_notes: true
