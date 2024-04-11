@@ -18,6 +18,11 @@ on:
         type: string
         required: true
         description: A python expression of markers to pass to the reproducibility pytests
+      test-version:
+        type: string
+        required: false
+        default: main
+        description: commit, branch or tag containing a particular version of the pytest tests
     outputs:
       artifact-name:
         value: ${{ jobs.repro.outputs.artifact-name }}
@@ -62,6 +67,7 @@ jobs:
 
           # Update test directory
           git -C ${{ vars.REPRO_TEST_LOCATION }} pull
+          git -C ${{ vars.REPRO_TEST_LOCATION }} checkout ${{ inputs.test-version }} --force
 
           # Remove base experiment if it already exists
           if [ -d "${{ env.BASE_EXPERIMENT_LOCATION }}" ]; then
