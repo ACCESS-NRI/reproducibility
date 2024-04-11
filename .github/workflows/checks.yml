@@ -66,8 +66,9 @@ jobs:
           module load payu/${{ vars.PAYU_VERSION }}
 
           # Update test directory
-          git -C ${{ vars.REPRO_TEST_LOCATION }} pull
+          git -C ${{ vars.REPRO_TEST_LOCATION }} fetch
           git -C ${{ vars.REPRO_TEST_LOCATION }} checkout ${{ inputs.test-version }} --force
+          git -C ${{ vars.REPRO_TEST_LOCATION }} pull
 
           # Remove base experiment if it already exists
           if [ -d "${{ env.BASE_EXPERIMENT_LOCATION }}" ]; then
