@@ -22,7 +22,6 @@ call-reusable:
 ### Reproducibility CI Checks: `checks.yml`
 
 This workflow is a generic reusable workflow that runs reproducibility checks in a given deployment environment.
-
 > [!NOTE]
 > The `vars` and `secrets` within this workflow are inherited from the caller, NOT defined in this repository. Therefore, they must be defined by any workflow that calls this workflow, and any call to this workflow must have `secrets: inherit`.
 
@@ -33,7 +32,9 @@ This workflow is a generic reusable workflow that runs reproducibility checks in
 | `model-name` | `string` | The name of the model to check for reproducibility | `true` | N/A | `"access-om2"` |
 | `config-tag` | `string` | A tag on an associated config branch to use for the reproducibility run | `true` | N/A | `"release-1deg_jra55_iaf-1.2"` |
 | `environment-name` | `string` | The name of a GitHub Deployment Environment that is inherited from the caller | `true` | N/A | `"Gadi"` |
-| `test-markers` | `string` (python-style expression) | A python expression of markers to pass to the reproducibility pytests `-m` flag. These pytests are defined in the caller | `true` | N/A | `"checksums and fast and not performance"` |
+| `test-markers` | `string` (python-style expression) | A python expression of markers to pass to the pytests `-m` flag. These are defined in `model-config-tests` | `true` | N/A | `"checksums"` |
+| `model-config-tests-version` | `string` | A version of `model-config-tests` package | `true` | N/A | `"0.0.1"` |
+| `python-version` | `string` | The version of the python module to load. This is used to create the virtual test environment | `true` | N/A | `"3.11.0"` |
 
 #### Outputs
 
@@ -56,6 +57,8 @@ jobs:
       environment-name: Gadi
       config-tag: ${{ github.ref_name }}
       test-markers: checksum
+      model-config-tests-version: "0.0.1"
+      python-version: "3.11.0"
     secrets: inherit
 ```
 
@@ -79,6 +82,8 @@ This workflow is used to create the initial checksums for a given config branch,
 | `committed-checksum-location` | `string` | Where in the repository the generated checksums should be committed to | Only if `commit-checksums` is `true` | `"./testing/checksums"` | `"./custom/checksum/location"` |
 | `committed-checksum-tag` | `string` | An optional tag to attach to the committed checksums | Only if `commit-checksums` is `true` | `""` | `release-1deg_jra55_iaf-1.0` |
 | `environment-name` | `string` | The name of a GitHub Environment that is inherited from the caller | `true` | N/A | `"Gadi Initial Checksum"` |
+| `model-config-tests-version` | `string` | A version of model-config-tests package | `true` | N/A | `"0.0.1"` |
+| `python-version` | `string` | The version of the python module to load. This is used to create the virtual test environment | `true` | N/A | `"3.11.0"` |
 
 #### Outputs
 
@@ -100,6 +105,8 @@ jobs:
       config-branch-name: release-1deg_jra55_iaf
       commit-checksums: false
       environment-name: "Gadi Initial Checksum"
+      model-config-tests-version: "0.0.1"
+      python-version: "3.11.0"
     secrets: inherit
 
   gen-checksums-with-commit:
@@ -112,6 +119,8 @@ jobs:
       committed-checksum-location: ./checksums
       committed-checksum-tag: release-1deg_jra55_iaf-1.0
       environment-name: "Gadi Initial Checksum"
+      model-config-tests-version: "0.0.1"
+      python-version: "3.11.0"
     permissions:
       contents: write
     secrets: inherit

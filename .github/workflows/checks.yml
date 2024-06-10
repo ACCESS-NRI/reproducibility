@@ -18,6 +18,14 @@ on:
         type: string
         required: true
         description: A python expression of markers to pass to the reproducibility pytests
+      model-config-tests-version:
+        type: string
+        required: true
+        description: A version of the model-config-tests package
+      python-version:
+        type: string
+        required: true
+        description: The python module version used to create test virtual environment
     outputs:
       artifact-name:
         value: ${{ jobs.repro.outputs.artifact-name }}
@@ -53,15 +61,9 @@ jobs:
         id: run
         env:
           BASE_EXPERIMENT_LOCATION: ${{ env.EXPERIMENT_LOCATION }}/base-experiment
+          TEST_VENV_LOCATION: ${{ env.EXPERIMENT_LOCATION }}/test-venv
         run: |
           ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} -i ${{ steps.ssh.outputs.private-key-path }} /bin/bash<<'EOT'
-
-          # Load payu conda enviroment
-          module use ${{ vars.PAYU_MODULE_LOCATION }}
-          module load payu/${{ vars.PAYU_VERSION }}
-
-          # Update test directory
-          git -C ${{ vars.REPRO_TEST_LOCATION }} pull
 
           # Remove base experiment if it already exists
           if [ -d "${{ env.BASE_EXPERIMENT_LOCATION }}" ]; then
@@ -73,24 +75,33 @@ jobs:
           cd ${{ env.BASE_EXPERIMENT_LOCATION }}
           git checkout ${{ inputs.config-tag }}
 
-          if [ -f "${{ vars.REPRO_TEST_LOCATION }}/requirements.txt" ]; then
-            pip install -r ${{ vars.REPRO_TEST_LOCATION }}/requirements.txt
-          fi
+          # Load Python module
+          module load python3/${{ inputs.python-version }}
 
-          # The pytest might fail in this command, but that is okay. We still want to run the
-          # rest of the commands after this step.
+          # Create and activate virtual environment
+          python3 -m venv ${{ env.TEST_VENV_LOCATION }}
+          source ${{ env.TEST_VENV_LOCATION }}/bin/activate
+
+          # Install model-config-tests
+          pip install model-config-tests==${{ inputs.model-config-tests-version }}
+
+          # The pytests in model-config-tests might fail in this command,
+          # but that is okay. We still want to run the rest of the commands
+          # after this step.
           set +e
 
-          # Run pytests - this also generates checksums files
-          pytest ${{ vars.REPRO_TEST_LOCATION }} -s \
-            -m "${{ inputs.test-markers }}" \
-            --rootdir ${{vars.REPRO_TEST_LOCATION }} \
+          # Run model-config-tests pytests - this also generates checksums files
+          model-config-tests -s -m "${{ inputs.test-markers }}" \
             --output-path ${{ env.EXPERIMENT_LOCATION }} \
             --junitxml=${{ env.EXPERIMENT_LOCATION }}/checksum/test_report.xml
+          
+          # Deactivate and remove the test virtual environment
+          deactivate
+          rm -rf ${{ env.TEST_VENV_LOCATION }}
 
-            # We want the exit code post-`pytest` to be 0 so the overall `ssh` call succeeeds
-            # after a potential `pytest` error.
-            exit 0
+          # We want the exit code post-`pytest` to be 0 so the overall `ssh` call succeeeds
+          # after a potential `pytest` error.
+          exit 0          
           EOT
           echo "experiment-location=${{ env.EXPERIMENT_LOCATION }}" >> $GITHUB_OUTPUT
 
